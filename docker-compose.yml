@@ -1,0 +1,46 @@
+services:
+  backend:
+    image: nl2uml-graduate-project-backend
+    container_name: nl2uml-backend
+    build:
+      context: ./nl2uml-flask-backend-main
+      dockerfile: Dockerfile
+    environment:
+      USE_INMEM_REPO: 0
+      #USE_DYNAMODB: 0 # (optional) make intent explicit
+      DEV_BYPASS_AUTH: 1
+      DEV_USER_EMAIL: "demo.user@example.com"
+      AI_AGENT_TYPE: "ollama"                         # ← single source of truth
+      OLLAMA_HOST: "http://host.docker.internal:11434"
+      OLLAMA_MODEL: "mistral"                          # e.g. llama3, mistral, qwen2.5
+      OLLAMA_IDEATION_MODELS: "deepseek-coder-v2:latest, llama3.1:70b"
+      OLLAMA_UML_MODELS: "llama3-code:latest, codellama:7b"
+      OLLAMA_VALIDATION_MODELS: "llama3-code:latest"
+      SQLITE_DB_PATH: "/var/lib/nl2uml/db/nl2uml.sqlite"   # ← added for local SQLite
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/var/lib/nl2uml                        # maps your local ./data dir
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  frontend:
+    image: nl2uml-graduate-project-frontend
+    container_name: nl2uml-frontend
+    build:
+      context: ./nl2uml-frontend-main
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_BASE: "http://localhost:8080"
+        REACT_APP_WS_ENABLED: "false"
+        REACT_APP_WS_URL: "ws://localhost:8080/ws"
+    ports:
+      - "3001:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped

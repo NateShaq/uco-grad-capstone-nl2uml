@@ -1,0 +1,117 @@
+.code-editor-shell {
+  background: linear-gradient(135deg, #0f172a, #111827);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  color: #e5e7eb;
+  overflow: hidden;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+}
+
+.code-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.code-editor-pill {
+  background: rgba(34, 211, 238, 0.15);
+  color: #22d3ee;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.code-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.code-editor-lang {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #c084fc;
+  letter-spacing: 0.05em;
+}
+
+.code-editor-surface {
+  position: relative;
+  flex: 1;
+  max-height: 720px;
+  overflow: hidden;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  line-height: 1.5;
+  background: radial-gradient(circle at 10% 10%, rgba(34, 211, 238, 0.07), transparent 18%),
+    radial-gradient(circle at 90% 0%, rgba(192, 132, 252, 0.08), transparent 22%),
+    #0b1220;
+}
+
+.code-highlighting {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 1rem 1.2rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: hidden;
+  max-height: 100%;
+}
+
+.code-highlighting code {
+  color: #e5e7eb;
+  display: block;
+  min-height: 100%;
+  width: 100%;
+}
+
+.code-editor-surface textarea {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  resize: none;
+  background: transparent;
+  color: transparent;
+  caret-color: #67e8f9;
+  padding: 1rem 1.2rem;
+  font: inherit;
+  line-height: inherit;
+  outline: none;
+  overflow: auto;
+}
+
+.token.keyword {
+  color: #c084fc;
+}
+
+.token.string {
+  color: #67e8f9;
+}
+
+.token.number {
+  color: #fcd34d;
+}
+
+.token.comment {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.code-editor-shell .btn-outline-light {
+  color: #e5e7eb;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.code-editor-shell .btn-outline-light:hover {
+  background: rgba(255, 255, 255, 0.1);
+}

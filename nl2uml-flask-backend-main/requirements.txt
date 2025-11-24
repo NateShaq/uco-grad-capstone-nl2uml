@@ -1,0 +1,10 @@
+Flask==3.0.2
+Werkzeug>=3.0.1
+Flask-Cors>=4.0.0
+gunicorn>=21.2.0
+boto3>=1.34
+requests>=2.31.0
+
+# flask-sock==0.7.0
+# simple-websocket>=1.0.0
+# hypercorn>=0.16.0

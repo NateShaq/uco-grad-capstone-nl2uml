@@ -1,0 +1,17 @@
+.app-main {
+  display: flex;
+  height: calc(100vh - 56px); /* minus navbar height */
+}
+
+.canvas-pane {
+  flex: 2;
+  border-right: 1px solid #ddd;
+  padding: 1rem;
+}
+
+.chat-pane {
+  flex: 1;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}

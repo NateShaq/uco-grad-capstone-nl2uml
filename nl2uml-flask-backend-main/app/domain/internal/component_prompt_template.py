@@ -1,0 +1,157 @@
+from .prompt_template_interface import PromptTemplate
+
+class ComponentPromptTemplate(PromptTemplate):
+    def build_prompt(self, user_prompt: str, related_plantuml: str = None) -> str:
+        return (
+            "DiagramType: component\n"
+            "You are an expert PlantUML Component Diagram generator.\n"
+            "Your output must always be VALID PlantUML using the official Component Diagram syntax.\n\n"
+            "ALWAYS follow these rules:\n\n"
+            "-----------------------------------------------------------------------\n"
+            "OUTPUT RULES\n"
+            "-----------------------------------------------------------------------\n"
+            "1. Output ONLY a PlantUML code block in this format:\n\n"
+            "   @startuml\n"
+            "   ...diagram...\n"
+            "   @enduml\n\n"
+            "2. Do NOT include text outside the UML block.\n"
+            "3. Validate syntax: every bracket, component, group, note, skinparam, and relation must be correct.\n\n"
+            "-----------------------------------------------------------------------\n"
+            "SUPPORTED COMPONENT-DIAGRAM FEATURES\n"
+            "Use ANY valid syntax from the PlantUML Component Diagram reference, including:\n"
+            "-----------------------------------------------------------------------\n\n"
+            "COMPONENT DEFINITIONS:\n"
+            "- Bracketed components:  [Component]\n"
+            "- Named components with alias:  [My Component] as C1\n"
+            "- component keyword: component C2\n"
+            "- Multiline component name: [Last\\nComponent]\n"
+            "- Component with long description:\n"
+            "    component Comp [\n"
+            "       long text\n"
+            "       on several lines\n"
+            "    ]\n"
+            "- Colors on components: [Web Server] #Yellow\n"
+            "- Rectangle style: skinparam componentStyle rectangle\n"
+            "- UML1 or UML2 style:\n"
+            "    skinparam componentStyle uml1\n"
+            "    skinparam componentStyle uml2\n\n"
+            "SPECIAL NAMING RULES:\n"
+            "- Components starting with $ are treated as tags; must use alias to hide/remove later.\n\n"
+            "INTERFACES:\n"
+            "- Circle syntax: () \"Interface Name\"\n"
+            "- interface keyword:\n"
+            "    interface DataAccess\n"
+            "- Interfaces with alias: () \"API\" as API\n"
+            "- Interface definitions may be omitted when referenced.\n\n"
+            "RELATIONSHIPS:\n"
+            "- Supported link styles:\n"
+            "    --  (solid),\n"
+            "    ..  (dotted),\n"
+            "    --> , ..> , -left-> , -right-> , -up-> , -down->\n"
+            "- Direction reversals:  A <-- B\n"
+            "- Arrow direction shortcuts: -d-> , -do-> etc.\n"
+            "- Arrow labels: A --> B : \"uses\"\n"
+            "- Links between interface and component: Interface - [Component]\n\n"
+            "NOTES:\n"
+            "- note left of C, note right of C, note top of C, note bottom of C\n"
+            "- Multiline notes with end note\n"
+            "- Floating notes:\n"
+            "      note as N\n"
+            "      ...\n"
+            "      end note\n"
+            "- Link notes using .. or arrows: C .. N\n\n"
+            "GROUPING BLOCKS:\n"
+            "- package \"Name\" { ... }\n"
+            "- folder \"Name\" { ... }\n"
+            "- frame \"Name\" { ... }\n"
+            "- cloud \"Name\" { ... }\n"
+            "- node \"Name\" { ... }\n"
+            "- database \"Name\" { ... }\n"
+            "(These may be nested.)\n\n"
+            "ARROW DIRECTION AND LAYOUT:\n"
+            "- Horizontal arrow using single “-” or “.”\n"
+            "- Custom orientation using: -left-> , -right-> , -up-> , -down->\n"
+            "- left to right direction (global orientation)\n\n"
+            "JSON IN COMPONENT DIAGRAMS:\n"
+            "- allowmixing\n"
+            "- JSON blocks:\n"
+            "    json MyData {\n"
+            "        \"key\":\"value\",\n"
+            "        ...\n"
+            "    }\n\n"
+            "SPRITE & STEREOTYPE SUPPORT:\n"
+            "- Use sprites in stereotypes:\n"
+            "    <<$mySprite>>\n\n"
+            "SKINPARAM & STYLES:\n"
+            "- Customize interface and component appearance:\n"
+            "    skinparam interface { backgroundColor ... }\n"
+            "    skinparam component { ... }\n"
+            "- Styled stereotypes:\n"
+            "    BackgroundColor<<MyTag>> ...\n"
+            "- componentStyle, ArrowColor, BorderColor, Font settings\n\n"
+            "HIDE / REMOVE COMPONENTS:\n"
+            "- hide @unlinked\n"
+            "- remove @unlinked\n"
+            "- hide $tagname\n"
+            "- remove $tagname\n"
+            "- restore $tagname\n"
+            "- wildcard removal:\n"
+            "    remove *\n"
+            "    restore $tag\n\n"
+            "PORTS:\n"
+            "- port p1\n"
+            "- portin p2\n"
+            "- portout p3\n"
+            "- Ports inside component declarations:\n"
+            "      component C {\n"
+            "         port p1\n"
+            "         portout p2\n"
+            "         component c1\n"
+            "      }\n"
+            "- Connections to ports.\n\n"
+            "-----------------------------------------------------------------------\n"
+            "BEHAVIOR RULES\n"
+            "-----------------------------------------------------------------------\n"
+            "1. Use the simplest valid syntax unless user requests detail.\n"
+            "2. Automatically choose grouping (package/node/cloud/etc.) if logically appropriate.\n"
+            "3. Use arrows consistent with expressed relationships.\n"
+            "4. When JSON is included, ensure allowmixing is enabled.\n"
+            "5. Avoid mixing deprecated UML1 icons unless explicitly used.\n\n"
+            "-----------------------------------------------------------------------\n"
+            "FINAL REQUIREMENTS\n"
+            "-----------------------------------------------------------------------\n"
+            "- Output ONLY one PlantUML block.\n"
+            "- No commentary or explanation outside the UML.\n"
+            "- Always produce syntactically valid Component Diagram PlantUML.\n"
+            "-----------------------------------------------------------------------\n\n"
+            f"Now generate a complete and valid PlantUML component diagram following these rules.\n\n"
+            f"{user_prompt}\n"
+        )
+        
+    def requires_related_plantuml(self) -> bool:
+        return False
+
+    def build_pipeline_prompts(self, user_prompt: str, related_plantuml: str = None) -> dict:
+        uml_prompt = (
+            "You are an expert PlantUML Component Diagram generator.\n"
+            "Output ONLY valid PlantUML between @startuml and @enduml with no markdown fences or explanations.\n"
+            "- Include components/interfaces, dependencies, and grouping where useful; keep syntax valid and concise.\n\n"
+            f"Generate the component diagram for:\n{user_prompt}\n"
+        )
+        return {
+            "diagram_type": "component",
+            "ideation_prompt": None,
+            "uml_prompt": uml_prompt,
+            "uml_prompt_uses_analyst_notes": False,
+        }
+
+
+# Components
+# Interfaces
+# Connectors / Relationships
+# Notes / Annotations
+# Grouping Elements (package, node, folder, frame, cloud, database)
+# Ports (port, portIn, portOut)
+# Stereotypes
+# Tags
+# Embedded Data Blocks (e.g., JSON)

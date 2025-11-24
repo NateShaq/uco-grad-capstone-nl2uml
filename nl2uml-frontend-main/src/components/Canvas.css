@@ -1,0 +1,58 @@
+.diagram-preview {
+  width: 100%;                /* Or whatever width you want */
+  height: 500px;              /* Fixed height for preview space, adjust as needed */
+  display: flex;
+  justify-content: center;    /* Center horizontally */
+  align-items: center;        /* Center vertically */
+  background: #fafcff;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  overflow: auto;
+  transition: box-shadow 0.4s, background 0.4s;
+}
+
+.diagram-preview img {
+  max-width: 60%;             /* Control the image size */
+  max-height: 90%;            /* Make sure it doesn't overflow vertically */
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;             /* Extra: in case flexbox isn't used */
+}
+
+.zoom-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.zoom-controls button {
+  padding: 4px 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+
+/* Remove this if you want only one animation style! */
+.updated-glow {
+  animation: glow-fade 3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes glow-fade {
+  0% {
+    box-shadow: 0 0 24px 8px #ffe066, 0 0 0px 0px #fff3cd;
+    background: #fff9e6;
+  }
+  20% {
+    box-shadow: 0 0 32px 10px #ffd166, 0 0 0px 0px #fff3cd;
+    background: #fff7da;
+  }
+  60% {
+    box-shadow: 0 0 12px 2px #ffe066, 0 0 0px 0px #fff3cd;
+    background: #fff9e6;
+  }
+  100% {
+    box-shadow: none;
+    background: #fafcff;  /* Back to normal */
+  }
+}

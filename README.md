@@ -10,6 +10,14 @@ Two containerized apps:
 - Ollama running on the host when using the default AI agent (`AI_AGENT_TYPE=ollama`)
   - Suggested quick start: `brew install --cask ollama && ollama pull mistral && ollama serve`
 
+### Ollama checks and models
+- Is Ollama running? `curl -sf http://localhost:11434/api/version` (JSON returns version if the daemon is up).
+- What models are available? `ollama list`
+- Start the daemon manually (if not already running): `ollama serve`
+- Pull recommended models:
+  - Single-model (default): `ollama pull mistral`
+  - Pipeline (set `AI_AGENT_TYPE=ollama-pipeline`): `ollama pull deepseek-coder-v2:latest llama3.1:70b llama3-code:latest codellama:7b`
+
 ## Quick start (fresh clone)
 1) Clone the repo and move into it:
    ```bash
@@ -36,6 +44,21 @@ Stop the stack with `docker compose down`. Data written by the backend is persis
 ## Local development without Docker
 - Backend: `cd nl2uml-flask-backend-main && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && FLASK_APP=app:create_app FLASK_RUN_PORT=8080 flask run` (set env vars from `.env.sample` as needed).
 - Frontend: `cd nl2uml-frontend-main && npm install && REACT_APP_API_BASE=http://localhost:8080 npm start` (CRA dev server on port 3000).
+
+## Useful Docker maintenance commands
+If you run into flaky containers or cached layers, these commands help reset the stack:
+```bash
+docker compose down -v --remove-orphans
+docker builder prune -af
+docker compose build --no-cache
+docker compose up -d
+docker logs -f nl2uml-backend
+```
+- Scope: these commands target this Compose project. To avoid collisions on shared hosts, set a unique project name before running them:
+  ```bash
+  export COMPOSE_PROJECT_NAME=nate-nl2uml   # or any unique name
+  ```
+  Note: `docker builder prune -af` is global build cache cleanup; skip it if others are building images on the same host.
 
 ## Repository layout
 - `docker-compose.yml` – builds/runs the full stack.

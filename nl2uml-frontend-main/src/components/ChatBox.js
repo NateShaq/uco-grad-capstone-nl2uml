@@ -2,8 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import { callApi } from './api'; // Adjust if using Amplify etc.
 
-
-// const API_BASE = 'https://xufmd6rfu2.execute-api.us-east-1.amazonaws.com/prod';
 const API_BASE = 'http://localhost:8080';
 
 function ChatBox({ projectId, diagramId, userEmail, sessionId, onDiagramUpdated }) {

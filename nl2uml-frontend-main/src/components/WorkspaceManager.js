@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { callApi } from './api';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-//const API_BASE = 'https://xufmd6rfu2.execute-api.us-east-1.amazonaws.com/prod';
 const API_BASE = 'http://localhost:8080';
 
 const WorkspaceManager = ({ onLoadDiagram, sessionId }) => {

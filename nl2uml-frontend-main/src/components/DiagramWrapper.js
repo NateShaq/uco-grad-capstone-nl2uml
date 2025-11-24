@@ -3,7 +3,6 @@ import Canvas from './Canvas';
 import { useWebSocket } from "./WebSocketProvider";
 import { callApi } from './api';
 
-// const API_BASE = 'https://xufmd6rfu2.execute-api.us-east-1.amazonaws.com/prod';
 const API_BASE = 'http://localhost:8080';
 
 function DiagramWrapper({ projectId, diagramId, refreshKey = 0, sessionId }) {

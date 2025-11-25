@@ -9,11 +9,11 @@
    ollama pull llama3.1:70b
 
    # PlantUML generation stage (stage 2)
-   ollama pull llama3-code:latest
+   ollama pull qwen2.5-coder:7b
    ollama pull codellama:7b
 
    # validator / fixer (stage 3, optional)
-   ollama pull llama3-code:latest
+   ollama pull magicoder:latest
 
    ollama serve   # starts http://localhost:11434
    ```
@@ -26,8 +26,8 @@
    docker run --rm -p 8080:8080 \
      -e OLLAMA_HOST=$OLLAMA_HOST -e OLLAMA_MODEL=$OLLAMA_MODEL -e AGENT_BACKEND=$AGENT_BACKEND \
      -e OLLAMA_IDEATION_MODELS="deepseek-coder-v2:latest, llama3.1:70b" \
-     -e OLLAMA_UML_MODELS="llama3-code:latest, codellama:7b" \
-     -e OLLAMA_VALIDATION_MODELS="llama3-code:latest" \
+     -e OLLAMA_UML_MODELS="qwen2.5-coder:7b, deepseek-coder-v2:latest, codellama:7b, llama3.1:70b" \
+     -e OLLAMA_VALIDATION_MODELS="magicoder:latest, codellama:7b" \
      -v "$PWD/data":/var/lib/nl2uml nl2uml:local
    ```
 

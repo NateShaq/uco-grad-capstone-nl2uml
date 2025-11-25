@@ -18,6 +18,7 @@ from .redo_command import RedoCommand
 # from application.undo_command import UndoCommand
 from ..domain.internal.plantuml_sanitizer import sanitize_plantuml
 from ..domain.internal.plantuml_validator import PlantUMLValidator
+from ..infrastructure.internal.agent_factory import AgentFactory
 
 def extract_sections(result):
     """
@@ -91,13 +92,13 @@ class ApplicationService(IApplicationService):
     def cleanup_expired(self) -> None:
         self.infra.cleanup_old_models()
 
-    def generate_and_save_diagram(self, user_email, project_id, name, diagram_type, prompt, diagram_id=None, agent_type=None, pipeline_prompts=None):
+    def generate_and_save_diagram(self, user_email, project_id, name, diagram_type, prompt, diagram_id=None, agent_type=None, pipeline_prompts=None, pipeline_models=None):
         self.ensure_user_exists(user_email)
         print("Generating diagram for user:", user_email)
         if not diagram_id:
             diagram_id = str(uuid.uuid4())
 
-        result = self.generate_model(prompt, diagram_id, agent_type, diagram_type=diagram_type, pipeline_prompts=pipeline_prompts)
+        result = self.generate_model(prompt, diagram_id, agent_type, diagram_type=diagram_type, pipeline_prompts=pipeline_prompts, pipeline_models=pipeline_models)
         print("results:", result)
         plantuml_text, explanation = extract_sections(result)
 
@@ -107,7 +108,7 @@ class ApplicationService(IApplicationService):
         print("Extracted Explanation:", explanation)
 
         sanitize_enabled = (os.getenv("ENABLE_PLANTUML_SANITIZER", "1").lower() in ("1", "true", "yes", "on"))
-        if sanitize_enabled and (diagram_type or "").lower() == "class":
+        if sanitize_enabled and (diagram_type or "").lower() in ("class", "eerd"):
             plantuml_text = sanitize_plantuml(plantuml_text)
 
         plantuml_text = self._validate_and_fix_plantuml(
@@ -138,9 +139,9 @@ class ApplicationService(IApplicationService):
             "explanation": explanation
         }
 
-    def generate_model(self, prompt: str, diagram_id: str, agent_type: str = None, diagram_type: str = None, pipeline_prompts: dict | None = None) -> str:
+    def generate_model(self, prompt: str, diagram_id: str, agent_type: str = None, diagram_type: str = None, pipeline_prompts: dict | None = None, pipeline_models: dict | None = None) -> str:
         print("running generate_modela")
-        uml = self.infra.prompt_to_uml(prompt, agent_type, diagram_type=diagram_type, pipeline_prompts=pipeline_prompts)
+        uml = self.infra.prompt_to_uml(prompt, agent_type, diagram_type=diagram_type, pipeline_prompts=pipeline_prompts, pipeline_models=pipeline_models)
         print("running generate_model")
         self.infra.save_model(diagram_id, "DIAGRAM", uml)
         return uml
@@ -231,6 +232,11 @@ class ApplicationService(IApplicationService):
 
         current = plantuml_text
         max_attempts = 5
+        repeat_error_count = 0
+        last_error_signature = None
+        fallback_agent_name = os.getenv("PLANTUML_VALIDATION_FALLBACK_AGENT")
+        fallback_used = False
+
         for attempt in range(1, max_attempts + 1):
             is_valid, validator_output = validator.validate(current)
             if is_valid:
@@ -240,16 +246,34 @@ class ApplicationService(IApplicationService):
 
             print(f"[plantuml] validation failed (attempt {attempt}/{max_attempts}): {validator_output}")
 
-            feedback = (
-                f"The PlantUML diagram failed validation with the following error:\n"
-                f"{validator_output or 'Unknown validator error'}\n\n"
-                f"Diagram type: {diagram_type or 'unspecified'}\n"
-                f"Original user request:\n{original_prompt}\n\n"
-                "Please correct ONLY the syntax errors while keeping the semantics intact. "
-                "Respond with valid PlantUML between @startuml and @enduml."
+            error_signature = self._extract_validator_signature(validator_output)
+            if error_signature and error_signature == last_error_signature:
+                repeat_error_count += 1
+            else:
+                repeat_error_count = 0
+            last_error_signature = error_signature or validator_output
+
+            feedback = self._build_validator_feedback(
+                validator_output=validator_output,
+                diagram_type=diagram_type,
+                original_prompt=original_prompt,
             )
+
+            agent_override = None
+            if (
+                not fallback_used
+                and fallback_agent_name
+                and repeat_error_count >= 1
+            ):
+                try:
+                    agent_override = AgentFactory.create_agent(fallback_agent_name)
+                    fallback_used = True
+                    print(f"[plantuml] switching to fallback refine agent '{fallback_agent_name}' after repeated validator errors on the same lines.")
+                except Exception as exc:
+                    print(f"[plantuml] unable to instantiate fallback agent '{fallback_agent_name}': {exc}")
+
             try:
-                agent_response = self.infra.refine_model(current, feedback)
+                agent_response = self.infra.refine_model(current, feedback, agent_override=agent_override)
                 refined, _ = extract_sections(agent_response)
                 current = sanitize_plantuml(refined or agent_response)
             except NotImplementedError:
@@ -259,3 +283,37 @@ class ApplicationService(IApplicationService):
         print(f"[plantuml] validator failed after {max_attempts} attempts. Final diagram:")
         print(current)
         return current
+
+    @staticmethod
+    def _build_validator_feedback(
+        validator_output: str,
+        diagram_type: Optional[str],
+        original_prompt: str,
+    ) -> str:
+        """
+        Build a stronger feedback prompt for the refine step so the agent fixes
+        every syntax error reported by the PlantUML validator.
+        """
+        return (
+            "The PlantUML diagram failed syntax validation. Fix ALL syntax errors reported below until the PlantUML '-check' command passes.\n"
+            f"Validator output:\n{validator_output or 'Unknown validator error'}\n\n"
+            "Rules:\n"
+            "- Keep the meaning, classes, and relationships unchanged where possible.\n"
+            "- If the same line keeps failing, rewrite that section completely so it is valid PlantUML.\n"
+            "- Return only PlantUML between @startuml and @enduml with no markdown fences or commentary.\n\n"
+            f"Diagram type: {diagram_type or 'unspecified'}\n"
+            f"Original user request:\n{original_prompt}"
+        )
+
+    @staticmethod
+    def _extract_validator_signature(validator_output: str | None) -> str | None:
+        """
+        Produce a compact signature (e.g., offending line number) so we can
+        detect when the validator is stuck on the same issue across attempts.
+        """
+        if not validator_output:
+            return None
+        match = re.search(r"line\s+(\d+)", validator_output, re.IGNORECASE)
+        if match:
+            return f"line:{match.group(1)}"
+        return validator_output.strip().splitlines()[0] if validator_output.strip() else None

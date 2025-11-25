@@ -3,6 +3,7 @@
 # (Presentation Layer)
 
 import json
+import traceback
 
 try:
     from app.bootstrap import build_application_service_injection
@@ -38,6 +39,7 @@ def handler(event, context):
 
     except Exception as e:
         print(f"❌ Error in /generate handler: {str(e)}")
+        print(traceback.format_exc())
         return {
             "statusCode": 500,
             "headers": cors_headers,

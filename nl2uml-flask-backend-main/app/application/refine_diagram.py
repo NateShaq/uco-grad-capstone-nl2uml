@@ -11,6 +11,7 @@ class RefineDiagram:
         diagram_id = body.get("diagramId")
         feedback = body.get("feedback", "")
         agent_type = body.get("AI_Agent", "").lower().strip() or "ollama"
+        pipeline_models = body.get("ollamaModels") or body.get("ollama_models")
 
         if not (diagram_id and project_id and feedback):
             raise ValueError("Missing required parameters")
@@ -35,7 +36,8 @@ class RefineDiagram:
             diagram_type=current["diagramType"],
             prompt=updated_prompt,
             diagram_id=diagram_id,
-            agent_type=agent_type
+            agent_type=agent_type,
+            pipeline_models=pipeline_models,
         )
 
         plantuml_after = new_diagram.get("plantuml", "")

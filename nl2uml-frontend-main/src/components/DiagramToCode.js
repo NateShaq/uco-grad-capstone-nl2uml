@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import { callApi } from './api';
 import './DiagramToCode.css';
+import OllamaModelSelector from './OllamaModelSelector';
 
 const API_BASE = 'http://localhost:8080';
 
@@ -46,6 +47,7 @@ function ConvertDiagramToCode({ projectId, diagramId, sessionId }) {
   const [codeText, setCodeText] = useState('');
   const [sending, setSending] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState('ollama-pipeline');
+  const [ollamaModels, setOllamaModels] = useState({ ideation: '', uml: '', validation: '' });
   const [selectedLanguage, setSelectedLanguage] = useState('python');
   const [statusMessage, setStatusMessage] = useState('');
   const [collapsed, setCollapsed] = useState(false);
@@ -61,6 +63,11 @@ function ConvertDiagramToCode({ projectId, diagramId, sessionId }) {
     setSending(true);
     setStatusMessage('Generating code from the current diagram...');
 
+    const modelsPayload =
+      selectedAgent.startsWith('ollama') && Object.values(ollamaModels || {}).some(Boolean)
+        ? ollamaModels
+        : undefined;
+
     try {
       const response = await callApi({
         endpoint: `${API_BASE}/code`,
@@ -71,6 +78,7 @@ function ConvertDiagramToCode({ projectId, diagramId, sessionId }) {
           diagramId,
           targetLanguage: selectedLanguage,
           agentType: selectedAgent,
+          ollamaModels: modelsPayload,
         },
       });
 
@@ -124,6 +132,16 @@ function ConvertDiagramToCode({ projectId, diagramId, sessionId }) {
               <option value="gronk" disabled>Gronk (X.AI Grok-3 Beta - disabled for local use)</option>
             </Form.Select>
           </Form.Group>
+          {selectedAgent.startsWith('ollama') && (
+            <div className="mb-3">
+              <OllamaModelSelector
+                apiBase={API_BASE}
+                selectedModels={ollamaModels}
+                onChange={setOllamaModels}
+                disabled={sending}
+              />
+            </div>
+          )}
 
           <Form.Group className="mb-2">
             <Form.Label>Language</Form.Label>

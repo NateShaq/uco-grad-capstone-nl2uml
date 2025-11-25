@@ -6,7 +6,6 @@ import { Button } from 'react-bootstrap';
 import jsPDF from 'jspdf';
 import { useNavigate } from 'react-router-dom';
 import DiagramWrapper from './DiagramWrapper';
-import ConvertDiagramToCode from './DiagramToCode';
 
 function MainLayout({ initialPrompt, setPrompt, sessionId }) {
   const navigate = useNavigate();
@@ -41,6 +40,7 @@ function MainLayout({ initialPrompt, setPrompt, sessionId }) {
           diagramId={initialPrompt?.diagramId}
           refreshKey={diagramRefreshKey}
           sessionId={sessionId}
+          onRefresh={() => setDiagramRefreshKey((prev) => prev + 1)}
         />
       </div>
       <div className="chat-pane">
@@ -49,11 +49,6 @@ function MainLayout({ initialPrompt, setPrompt, sessionId }) {
           diagramId={initialPrompt?.diagramId}
           sessionId={sessionId}
           onDiagramUpdated={() => setDiagramRefreshKey((prev) => prev + 1)}
-        />
-        <ConvertDiagramToCode
-          projectId={initialPrompt?.projectId}
-          diagramId={initialPrompt?.diagramId}
-          sessionId={sessionId}
         />
       </div>
     </div>

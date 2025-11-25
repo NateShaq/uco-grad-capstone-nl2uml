@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 class IApplicationService(ABC):
 
     @abstractmethod
-    def generate_model(self, prompt: str, diagram_id: str, agent_type: str = None, diagram_type: str = None, pipeline_prompts: dict | None = None) -> str:
+    def generate_model(self, prompt: str, diagram_id: str, agent_type: str = None, diagram_type: str = None, pipeline_prompts: dict | None = None, pipeline_models: dict | None = None) -> str:
         """Generate a UML model, optionally using a specific AI agent."""
         pass
     

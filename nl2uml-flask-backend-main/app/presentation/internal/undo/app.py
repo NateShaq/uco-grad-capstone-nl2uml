@@ -11,7 +11,7 @@ service = build_application_service_injection()
 
 cors_headers = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization,X-User-Email,X-User-Id,X-Session-Id",
     "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PUT,DELETE",
 }
 

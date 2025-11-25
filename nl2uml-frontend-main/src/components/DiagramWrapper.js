@@ -2,10 +2,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import Canvas from './Canvas';
 import { useWebSocket } from "./WebSocketProvider";
 import { callApi } from './api';
+import ConvertDiagramToCode from './DiagramToCode';
 
 const API_BASE = 'http://localhost:8080';
 
-function DiagramWrapper({ projectId, diagramId, refreshKey = 0, sessionId }) {
+function DiagramWrapper({ projectId, diagramId, refreshKey = 0, sessionId, onRefresh }) {
   const [umlText, setUmlText] = useState('');
   const [explanation, setExplanation] = useState('');
   const [justUpdated, setJustUpdated] = useState(false);
@@ -151,6 +152,11 @@ function DiagramWrapper({ projectId, diagramId, refreshKey = 0, sessionId }) {
           explanation
         )}
       </div>
+      <ConvertDiagramToCode
+        projectId={projectId}
+        diagramId={diagramId}
+        sessionId={sessionId}
+      />
     </div>
   );
 }

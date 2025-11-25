@@ -4,6 +4,7 @@ from .component_prompt_template import ComponentPromptTemplate
 from .class_prompt_template import ClassPromptTemplate
 from .sequence_prompt_template import SequencePromptTemplate
 from .state_prompt_template import StatePromptTemplate
+from .enhanced_entity_relationship_prompt_template import EnhancedEntityRelationshipPromptTemplate
 
 class PromptTemplateFactory:
     @staticmethod
@@ -17,6 +18,8 @@ class PromptTemplateFactory:
             return ComponentPromptTemplate()
         elif diagram_type == "class":
             return ClassPromptTemplate()
+        elif diagram_type == "eerd":
+            return EnhancedEntityRelationshipPromptTemplate()
         elif diagram_type == "sequence":
             return SequencePromptTemplate()
         elif diagram_type == "state":

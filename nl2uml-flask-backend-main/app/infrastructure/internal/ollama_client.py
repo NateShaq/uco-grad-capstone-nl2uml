@@ -1,7 +1,9 @@
 from __future__ import annotations
-import os, requests
+import os, requests, logging
 from typing import Optional
 from app.infrastructure.internal.agent_registry import AgentRegistry
+
+logger = logging.getLogger(__name__)
 
 @AgentRegistry.register("ollama")
 class OllamaClient:
@@ -12,6 +14,7 @@ class OllamaClient:
 
     def _post(self, path: str, payload: dict) -> dict:
         url = f"{self.host}{path}"
+        logger.info("[ollama] sending prompt to model=%s url=%s", payload.get("model"), url)
         data = {"stream": False, **payload}
         r = requests.post(url, json=data, timeout=120)
         r.raise_for_status()

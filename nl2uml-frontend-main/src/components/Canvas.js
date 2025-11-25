@@ -7,8 +7,9 @@ function Canvas({ umlText, justUpdated }) {
   const [showModal, setShowModal] = useState(false);
   const containerRef = useRef(null);
 
-  const encoded = encodePlantUML(umlText);
-  const imageUrl = `https://www.plantuml.com/plantuml/svg/${encoded}`;
+  const hasDiagram = !!(umlText && umlText.trim().toLowerCase().includes('@startuml'));
+  const encoded = hasDiagram ? encodePlantUML(umlText) : '';
+  const imageUrl = hasDiagram ? `https://www.plantuml.com/plantuml/svg/${encoded}` : null;
 
   const zoomIn = () => setZoom(prev => Math.min(prev + 0.1, 3));
   const zoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0.2));
@@ -30,7 +31,16 @@ function Canvas({ umlText, justUpdated }) {
     }
   }, []);
 
-  if (!umlText) return <p>No diagram to display.</p>;
+  if (!hasDiagram) {
+    return (
+      <div className="diagram-preview d-flex flex-column align-items-center justify-content-center text-muted" style={{ minHeight: 220 }}>
+        <div className="mb-2 fw-semibold">No diagram available to render.</div>
+        <div className="small text-center">
+          Ensure your diagram includes <code>@startuml</code> and <code>@enduml</code> markers, then regenerate.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -40,12 +50,14 @@ function Canvas({ umlText, justUpdated }) {
         onClick={() => setShowModal(true)}
         style={{ cursor: 'pointer' }}
       >
-        <img
-          src={imageUrl}
-          alt="UML Diagram"
-          className="diagram-img"
-          style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}
-        />
+        {imageUrl && (
+          <img
+            src={imageUrl}
+            alt="UML Diagram"
+            className="diagram-img"
+            style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}
+          />
+        )}
         <div className="fullscreen-icon position-absolute top-0 end-0 m-2 text-white bg-dark rounded px-2 py-1" style={{ opacity: 0.8, fontSize: '0.75rem' }}>
           🔍 Fullscreen
         </div>

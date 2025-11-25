@@ -8,13 +8,15 @@ _layer = os.path.join(os.path.dirname(__file__), "util", "python")
 if _layer not in sys.path:
     sys.path.insert(0, _layer)
 
-ALLOWED_ORIGINS = {"http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001"}
+_default_origins = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,http://cmsai:3000,http://cmsai:3001"
+ALLOWED_ORIGINS = {o.strip() for o in os.getenv("ALLOWED_ORIGINS", _default_origins).split(",") if o.strip()}
 
 def _cors_headers():
     origin = request.headers.get("Origin")
-    allow_origin = origin if origin in ALLOWED_ORIGINS else "http://localhost:3001"
+    allow_origin = origin if origin in ALLOWED_ORIGINS else (next(iter(ALLOWED_ORIGINS)) if ALLOWED_ORIGINS else "http://localhost:3001")
     req_headers = request.headers.get("Access-Control-Request-Headers")
-    allow_headers = req_headers if req_headers else "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+    base_headers = "Content-Type, Authorization, X-Requested-With, Accept, Origin, X-User-Email, X-Session-Id, X-User-Id"
+    allow_headers = f"{base_headers}, {req_headers}" if req_headers else base_headers
     return {
         "Access-Control-Allow-Origin": allow_origin,
         "Vary": "Origin",
@@ -46,8 +48,8 @@ def create_app():
 
     CORS(
         app,
-        resources={r"/*": {"origins": ["http://localhost:3001", "http://127.0.0.1:3001"]}},
-        allow_headers=["Content-Type", "Authorization"],
+        resources={r"/*": {"origins": list(ALLOWED_ORIGINS)}},
+        allow_headers=["Content-Type", "Authorization", "X-User-Email", "X-Session-Id", "X-User-Id"],
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
         max_age=600,
         supports_credentials=False,

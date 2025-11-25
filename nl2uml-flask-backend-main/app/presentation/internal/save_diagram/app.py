@@ -7,9 +7,20 @@ from app.util.login.auth import resolve_user_email
 # dynamodb = boto3.resource('dynamodb')
 # model_table = dynamodb.Table(os.environ['TABLE_NAME'])
 
+cors_headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-User-Email",
+    "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PUT,DELETE",
+}
+
 def handler(event, context):
+    # Short-circuit preflight so the browser sees a 200 with CORS headers.
+    if event.get("httpMethod") == "OPTIONS":
+        return {"statusCode": 200, "headers": cors_headers, "body": ""}
+
     try:
-        body = json.loads(event.get("body", "{}"))
+        raw_body = event.get("body") or "{}"
+        body = json.loads(raw_body)
         diagram_id = body.get("diagramId")
         project_id = body.get("projectId")
         plantuml = body.get("plantuml")
@@ -28,20 +39,12 @@ def handler(event, context):
 
         return {
             "statusCode": 200,
-            "headers": {
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-                    "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PUT,DELETE"
-                },
+            "headers": cors_headers,
             "body": json.dumps({"message": "Diagram saved!"})
         }
     except Exception as e:
         return {
             "statusCode": 500,
-            "headers": {
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-                    "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PUT,DELETE"
-                },
+            "headers": cors_headers,
             "body": json.dumps({"error": str(e)})
         }

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { callApi } from './api';
 import { useNavigate, useLocation } from 'react-router-dom';
+import OllamaModelSelector from "./OllamaModelSelector";
 
 const API_BASE = 'http://localhost:8080';
 
@@ -16,6 +17,7 @@ const WorkspaceManager = ({ onLoadDiagram, sessionId }) => {
   const [diagramType, setDiagramType] = useState("");
   const [diagramPrompt, setDiagramPrompt] = useState("");
   const [agentType, setAgentType] = useState("ollama-pipeline");
+  const [ollamaModels, setOllamaModels] = useState({ ideation: '', uml: '', validation: '' });
   const [includeProjectDiagrams, setIncludeProjectDiagrams] = useState(false);
   const [selectedDiagramIds, setSelectedDiagramIds] = useState([]);
   const [designApproach, setDesignApproach] = useState("");
@@ -123,6 +125,11 @@ const WorkspaceManager = ({ onLoadDiagram, sessionId }) => {
         attachedDiagramIds: includeProjectDiagrams ? selectedDiagramIds : []
       });
 
+      const modelsPayload =
+        agentType.startsWith("ollama") && Object.values(ollamaModels || {}).some(Boolean)
+          ? ollamaModels
+          : undefined;
+
       const resp = await callApi({
         endpoint: `${API_BASE}/uml/generate`,
         method: 'POST',
@@ -133,6 +140,7 @@ const WorkspaceManager = ({ onLoadDiagram, sessionId }) => {
           diagramType,
           prompt: diagramPrompt,
           AI_Agent: agentType,
+          ollamaModels: modelsPayload,
           attachedDiagramIds: includeProjectDiagrams ? selectedDiagramIds : []
         }
       });
@@ -275,6 +283,7 @@ const WorkspaceManager = ({ onLoadDiagram, sessionId }) => {
                       <option value="class">Class Diagram</option>
                       <option value="sequence">Sequence Diagram</option>
                       <option value="state">State Diagram</option>
+                      <option value="eerd">Enhanced Entity Relationship Diagram</option>
                     </select>
                   </div>
                   <div className="mb-3">
@@ -289,6 +298,16 @@ const WorkspaceManager = ({ onLoadDiagram, sessionId }) => {
                       <option value="gronk" disabled>Gronk (X.AI Grok-3 Beta - disabled for local use)</option>
                     </select>
                   </div>
+                  {agentType.startsWith("ollama") && (
+                    <div className="mb-3">
+                      <OllamaModelSelector
+                        apiBase={API_BASE}
+                        selectedModels={ollamaModels}
+                        onChange={setOllamaModels}
+                        disabled={loading}
+                      />
+                    </div>
+                  )}
                   <div className="form-check form-switch mb-3 d-flex align-items-center">
                     <input className="form-check-input me-2" type="checkbox" id="includeDiagramsToggle" checked={includeProjectDiagrams} onChange={() => {
                       setIncludeProjectDiagrams(!includeProjectDiagrams);

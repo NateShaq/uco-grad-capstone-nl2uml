@@ -47,6 +47,7 @@ function InitialPrompt({ onSubmit, sessionId }) {
             <option>Class Diagram</option>
             <option>Sequence Diagram</option>
             <option>State Diagram</option>
+            <option>Enhanced Entity Relationship Diagram</option>
           </Form.Select>
         </Form.Group>
         <Form.Group className="mb-3">

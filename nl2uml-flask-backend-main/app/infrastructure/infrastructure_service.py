@@ -20,10 +20,10 @@ class InfrastructureService(IInfrastructureService):
     def generate_prompt(self, prompt: str) -> str:
         return self._ai.generate(prompt)
 
-    def prompt_to_uml(self, prompt: str, agent_type: Optional[str] = None, diagram_type: Optional[str] = None, pipeline_prompts: Optional[dict] = None) -> str:
+    def prompt_to_uml(self, prompt: str, agent_type: Optional[str] = None, diagram_type: Optional[str] = None, pipeline_prompts: Optional[dict] = None, pipeline_models: Optional[dict] = None) -> str:
         agent = AgentFactory.create_agent(agent_type) if agent_type else self._ai
         if hasattr(agent, "prompt_to_uml"):
-            return agent.prompt_to_uml(prompt, diagram_type=diagram_type, pipeline_prompts=pipeline_prompts)
+            return agent.prompt_to_uml(prompt, diagram_type=diagram_type, pipeline_prompts=pipeline_prompts, pipeline_models=pipeline_models)
         raise NotImplementedError("Selected agent does not support prompt_to_uml.")
 
     def explain_model(self, model: str) -> str:

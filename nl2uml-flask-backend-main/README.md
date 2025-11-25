@@ -8,16 +8,18 @@ We support a chained Ollama flow (reasoning → PlantUML → validation) using t
 
 - `deepseek-coder-v2:latest` (reasoning JSON IR)
 - `llama3.1:70b` (reasoning JSON IR, alternate)
-- `llama3-code:latest` (PlantUML + validator)
+- `qwen2.5-coder:7b` (PlantUML)
 - `codellama:7b` (PlantUML alternate)
+- `magicoder:latest` (validation fallback)
 
 ### Install models on the host
 
 ```bash
 ollama pull deepseek-coder-v2:latest
 ollama pull llama3.1:70b
-ollama pull llama3-code:latest
+ollama pull qwen2.5-coder:7b
 ollama pull codellama:7b
+ollama pull magicoder:latest
 ollama serve   # starts http://localhost:11434
 ```
 
@@ -29,8 +31,8 @@ The Docker backend calls the host Ollama runtime at `http://host.docker.internal
 
 - `AI_AGENT_TYPE=ollama-pipeline` (set to make the chain the default)
 - `OLLAMA_IDEATION_MODELS="deepseek-coder-v2:latest, llama3.1:70b"`
-- `OLLAMA_UML_MODELS="llama3-code:latest, codellama:7b"`
-- `OLLAMA_VALIDATION_MODELS="llama3-code:latest"`
+- `OLLAMA_UML_MODELS="qwen2.5-coder:7b, deepseek-coder-v2:latest, codellama:7b, llama3.1:70b"`
+- `OLLAMA_VALIDATION_MODELS="magicoder:latest, codellama:7b"`
 - `OLLAMA_HOST=http://host.docker.internal:11434`
 
 ### Optional debug logging

@@ -18,7 +18,7 @@ class PromptTemplate(ABC):
         Optional: Provide specialized prompts for the multi-model pipeline.
         Return a dict like:
         {
-          "diagram_type": "class|sequence|use_case|activity|component|state",
+          "diagram_type": "class|sequence|use_case|activity|component|state|eerd",
           "ideation_prompt": "...",        # optional; if None, ideation is skipped
           "uml_prompt": "...",             # required; final UML generation prompt
           "uml_prompt_uses_analyst_notes": bool  # if True, pipeline formats with analyst notes

@@ -14,8 +14,8 @@ services:
       OLLAMA_HOST: "http://host.docker.internal:11434"
       OLLAMA_MODEL: "mistral"                          # e.g. llama3, mistral, qwen2.5
       OLLAMA_IDEATION_MODELS: "deepseek-coder-v2:latest, llama3.1:70b"
-      OLLAMA_UML_MODELS: "llama3-code:latest, codellama:7b"
-      OLLAMA_VALIDATION_MODELS: "llama3-code:latest"
+      OLLAMA_UML_MODELS: "qwen2.5-coder:7b, deepseek-coder-v2:latest, codellama:7b, llama3.1:70b"
+      OLLAMA_VALIDATION_MODELS: "magicoder:latest, codellama:7b"
       SQLITE_DB_PATH: "/var/lib/nl2uml/db/nl2uml.sqlite"   # ← added for local SQLite
     ports:
       - "8080:8080"

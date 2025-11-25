@@ -2,11 +2,13 @@
 from __future__ import annotations
 from typing import List, Tuple
 from flask import Flask
+import os
 from .aws_lambda_adapter import AWSLambdaAdapter, ALL_METHODS
 
 class PresentationGateway:
     def __init__(self, default_cors_origin: str = "http://localhost:3001"):
-        self.adapter = AWSLambdaAdapter(default_cors_origin=default_cors_origin)
+        cors_origin = os.getenv("DEFAULT_CORS_ORIGIN", default_cors_origin)
+        self.adapter = AWSLambdaAdapter(default_cors_origin=cors_origin)
 
         self.lambda_routes: List[Tuple[str, str]] = [
             ("/code",                 "app.presentation.internal.code_generator.app:handler"),
@@ -21,6 +23,7 @@ class PresentationGateway:
             ("/refine",               "app.presentation.internal.feedback_handler.app:handler"),
             ("/save-diagram",         "app.presentation.internal.save_diagram.app:handler"),
             ("/undo",                 "app.presentation.internal.undo.app:handler"),
+            ("/ollama/models",        "app.presentation.internal.ollama_models.app:handler"),
             # If you want a param route too, add it explicitly:
             # ("/diagrams/<diagram_id>", "app.presentation.internal.workspace_manager.app:handler"),
         ]

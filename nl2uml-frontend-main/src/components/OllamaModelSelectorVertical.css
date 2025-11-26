@@ -1,0 +1,11 @@
+.ollama-models-popover {
+  position: fixed;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 16px;
+  z-index: 999999;
+  max-height: min(420px, 90vh);
+  overflow-y: auto;
+}

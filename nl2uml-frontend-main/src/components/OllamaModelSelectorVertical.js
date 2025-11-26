@@ -2,12 +2,24 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Form, Spinner, Button } from 'react-bootstrap';
 import { API_BASE } from '../config';
 import ModelsPopoverPortal from './ModelsPopoverPortal';
+import './OllamaModelSelectorVertical.css';
 
 const contextOptions = [2048, 4096, 8192, 16384, 32768];
 
 function normalizeSelected(selected) {
   return { ideation: '', uml: '', validation: '', contextWindow: '', ...(selected || {}) };
 }
+
+const BIG_NUMBER = Number.MAX_SAFE_INTEGER;
+const parseModelSize = (model) => {
+  const match = `${model}`.match(/(\d+)\s*b/i);
+  return match ? Number(match[1]) : BIG_NUMBER;
+};
+
+const pickSmallestModel = (models = []) => {
+  if (!models.length) return '';
+  return [...models].sort((a, b) => parseModelSize(a) - parseModelSize(b))[0];
+};
 
 const defaultOptions = { ideation: [], uml: [], validation: [], defaultNumCtx: null };
 
@@ -64,15 +76,15 @@ export default function OllamaModelSelectorVertical({
     const next = { ...normalizedSelected };
     let changed = false;
     if (!next.ideation && options.ideation.length) {
-      next.ideation = options.ideation[0];
+      next.ideation = pickSmallestModel(options.ideation);
       changed = true;
     }
     if (!next.uml && options.uml.length) {
-      next.uml = options.uml[0];
+      next.uml = pickSmallestModel(options.uml);
       changed = true;
     }
     if (!next.validation && options.validation.length) {
-      next.validation = options.validation[0];
+      next.validation = pickSmallestModel(options.validation);
       changed = true;
     }
     if (!next.contextWindow && options.defaultNumCtx) {

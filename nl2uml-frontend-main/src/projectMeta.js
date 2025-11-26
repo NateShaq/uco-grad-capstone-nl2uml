@@ -1,7 +1,7 @@
 const projectMeta = {
   projectName: 'NL2UML',
   version: 'v0.1.0',
-  abstract: 'NL2UML transforms natural-language software requirements into editable UML diagrams using an LLM-powered pipeline backed by PlantUML rendering and export tools. Sessions stay isolated via random identifiers so research feedback and diagram iterations can be traced to a single workspace.',
+  abstract: 'NL2UML is an LLM-driven platform that turns natural-language software requirements into structured, editable UML diagrams. It orchestrates a multi-stage pipeline—model selection, prompt templating, and PlantUML rendering—to produce accurate diagrams while balancing latency, compute, and resource constraints within finite context windows. Each session is isolated via randomized identifiers, enabling reproducible experimentation and iterative refinement as specifications evolve. By surfacing a global view of infrastructure, class structure, and design patterns, the system keeps the codebase aligned with both initial intent and ongoing changes. As a research prototype, NL2UML demonstrates how agent-assisted workflows bridge textual specification and visual modeling, preserving coherence from early design through implementation.',
   technologies: [
     'React + React Router + Bootstrap UI',
     'Flask API orchestrating Ollama-hosted LLMs',

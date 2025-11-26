@@ -35,6 +35,11 @@ What the scripts do:
   - Single-model (default): `ollama pull mistral`
   - Pipeline (set `AI_AGENT_TYPE=ollama-pipeline`): `ollama pull deepseek-coder-v2:latest llama3.1:70b llama3-code:latest codellama:7b`
 
+### Add new Ollama models
+- Pull on the host: `ollama pull <model-name>` (the backend talks to the host runtime).
+- Expose it to the app by adding the model name to `OLLAMA_MODEL` (single-model mode) or to the pipeline lists in `docker-compose.yml` (`OLLAMA_IDEATION_MODELS`, `OLLAMA_UML_MODELS`, `OLLAMA_VALIDATION_MODELS`). You can also override those values via a `.env` file.
+- Restart the backend to pick up the change: `docker compose up -d backend` (rebuild only if you changed defaults baked into the image).
+
 ## Quick start (fresh clone)
 1) Clone the repo and move into it:
    ```bash

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import { callApi } from './api';
+import { API_BASE } from '../config';
 
 function InitialPrompt({ onSubmit, sessionId }) {
   const [input, setInput] = useState('');
@@ -18,7 +19,7 @@ function InitialPrompt({ onSubmit, sessionId }) {
     const activeSession = sessionId || window.localStorage.getItem('nl2uml-session-id') || window.localStorage.getItem('userEmail');
     try {
       const data = await callApi({
-        endpoint: 'http://localhost:8080/generate',
+        endpoint: `${API_BASE}/generate`,
         method: 'POST',
         sessionId: activeSession,
         body: {

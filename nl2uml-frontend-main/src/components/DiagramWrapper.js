@@ -3,8 +3,9 @@ import Canvas from './Canvas';
 import { useWebSocket } from "./WebSocketProvider";
 import { callApi } from './api';
 import ConvertDiagramToCode from './DiagramToCode';
-
-const API_BASE = 'http://localhost:8080';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { API_BASE } from "../config";
 
 function DiagramWrapper({ projectId, diagramId, refreshKey = 0, sessionId, onRefresh }) {
   const [umlText, setUmlText] = useState('');
@@ -97,9 +98,15 @@ function DiagramWrapper({ projectId, diagramId, refreshKey = 0, sessionId, onRef
           plantuml: umlText,
         }
       });
-      alert('Diagram saved!');
+      toast.success('Diagram saved!', {
+        position: 'top-center',
+        autoClose: 3000,
+      });
     } catch (e) {
-      alert('Save failed: ' + e.message);
+      toast.error('Save failed: ' + e.message, {
+        position: 'top-center',
+        autoClose: 3000,
+      });
     }
   };
 
@@ -122,6 +129,15 @@ function DiagramWrapper({ projectId, diagramId, refreshKey = 0, sessionId, onRef
 
   return (
     <div>
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        newestOnTop
+        hideProgressBar={false}
+        closeOnClick
+        draggable={false}
+        pauseOnHover
+      />
       <Canvas
         umlText={umlText}
         justUpdated={justUpdated}

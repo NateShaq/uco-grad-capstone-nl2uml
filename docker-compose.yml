@@ -13,10 +13,11 @@ services:
       AI_AGENT_TYPE: "ollama"                         # ← single source of truth
       OLLAMA_HOST: "http://host.docker.internal:11434"
       OLLAMA_MODEL: "mistral"                          # e.g. llama3, mistral, qwen2.5
-      OLLAMA_IDEATION_MODELS: "deepseek-coder-v2:latest, llama3.1:70b"
-      OLLAMA_UML_MODELS: "qwen2.5-coder:7b, deepseek-coder-v2:latest, codellama:7b, llama3.1:70b"
-      OLLAMA_VALIDATION_MODELS: "magicoder:latest, codellama:7b"
+      OLLAMA_IDEATION_MODELS: "deepseek-coder-v2:latest, gemma3:12b, llama3.1:70b"
+      OLLAMA_UML_MODELS: "gemma3:27b, qwen2.5-coder:7b, deepseek-coder-v2:latest, codellama:7b, llama3.1:70b"
+      OLLAMA_VALIDATION_MODELS: "gemma3:4b, magicoder:latest, codellama:7b"
       SQLITE_DB_PATH: "/var/lib/nl2uml/db/nl2uml.sqlite"   # ← added for local SQLite
+      ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001}"
     ports:
       - "8080:8080"
     volumes:
@@ -35,9 +36,9 @@ services:
       context: ./nl2uml-frontend-main
       dockerfile: Dockerfile
       args:
-        REACT_APP_API_BASE: "http://localhost:8080"
-        REACT_APP_WS_ENABLED: "false"
-        REACT_APP_WS_URL: "ws://localhost:8080/ws"
+        REACT_APP_API_BASE: "${REACT_APP_API_BASE:-http://localhost:8080}"
+        REACT_APP_WS_ENABLED: "${REACT_APP_WS_ENABLED:-false}"
+        REACT_APP_WS_URL: "${REACT_APP_WS_URL:-ws://localhost:8080/ws}"
     ports:
       - "3001:80"
     depends_on:

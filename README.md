@@ -7,8 +7,25 @@ Two containerized apps:
 ## Requirements
 - Docker + Docker Compose
 - Ports `8080` (API) and `3001` (UI) available on the host
-- Ollama running on the host when using the default AI agent (`AI_AGENT_TYPE=ollama`)
-  - Suggested quick start: `brew install --cask ollama && ollama pull mistral && ollama serve`
+- Ollama reachable by the containers at `http://host.docker.internal:11434` (the scripts below bind Ollama to `0.0.0.0:11434` so the containers can reach it)
+- Java runtime available on the host (used by PlantUML inside the backend)
+
+## Host setup scripts (recommended)
+Use one of these to install prerequisites, start Ollama, pull models, and launch the stack:
+- macOS: `chmod +x Install_MacOS.sh && ./Install_MacOS.sh`
+- Linux (Debian/Ubuntu-like): `chmod +x Install_Linux.sh && ./Install_Linux.sh`
+- Windows: run an elevated PowerShell and execute `powershell -ExecutionPolicy Bypass -File .\Install_Windows.ps1` (requires winget)
+
+Env toggles:
+- `INSTALL_ALL_MODELS=true` pulls the full pipeline set (big downloads). Default pulls only `mistral`.
+- `OLLAMA_MODELS="model1 model2"` overrides the list to pull.
+
+What the scripts do:
+- Install Docker (Desktop on macOS; engine + compose plugin on Linux) and ensure the daemon is running.
+- Install Ollama, bind it to `0.0.0.0:11434` with `OLLAMA_ORIGINS=*`, and start the daemon.
+- Pull the requested models via `ollama pull`.
+- Install OpenJDK if `java` is missing.
+- Run `docker compose up --build -d` from the repo root.
 
 ### Ollama checks and models
 - Is Ollama running? `curl -sf http://localhost:11434/api/version` (JSON returns version if the daemon is up).
@@ -39,7 +56,8 @@ Stop the stack with `docker compose down`. Data written by the backend is persis
   - Set `AI_AGENT_TYPE=ollama-pipeline` to enable the multi-model chain; pull the models listed in `nl2uml-flask-backend-main/README.md`.
   - `OLLAMA_HOST` defaults to `http://host.docker.internal:11434`; update if your runtime is elsewhere.
   - `SQLITE_DB_PATH` points at `/var/lib/nl2uml/db/nl2uml.sqlite`; the host directory is `./data`.
-- Frontend build args (API base URL, websockets) are also in `docker-compose.yml` under `frontend`.
+  - `ALLOWED_ORIGINS` lets you whitelist non-localhost frontends (comma-separated).
+- Frontend build args (API base URL, websockets) are also in `docker-compose.yml` under `frontend`; set `REACT_APP_API_BASE`, `REACT_APP_WS_URL`, and `REACT_APP_WS_ENABLED` there (or via `.env`) to use a DNS name instead of localhost.
 
 ## Local development without Docker
 - Backend: `cd nl2uml-flask-backend-main && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && FLASK_APP=app:create_app FLASK_RUN_PORT=8080 flask run` (set env vars from `.env.sample` as needed).

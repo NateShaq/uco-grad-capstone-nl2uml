@@ -10,9 +10,10 @@ from app.infrastructure.internal.agent_registry import AgentRegistry
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_IDEATION_MODELS = "deepseek-coder-v2:latest, llama3.1:70b"
-DEFAULT_UML_MODELS = "qwen2.5-coder:7b, deepseek-coder-v2:latest, codellama:7b, llama3.1:70b"
-DEFAULT_VALIDATION_MODELS = "magicoder:latest, codellama:7b"
+DEFAULT_IDEATION_MODELS = "deepseek-coder-v2:latest, gemma3:12b, llama3.1:70b"
+DEFAULT_UML_MODELS = "gemma3:27b, qwen2.5-coder:7b, deepseek-coder-v2:latest, codellama:7b, llama3.1:70b"
+DEFAULT_VALIDATION_MODELS = "gemma3:4b, magicoder:latest, codellama:7b"
+DEFAULT_NUM_CTX = 4096
 
 
 def _parse_models(value: Optional[Iterable[str] | str]) -> List[str]:
@@ -52,6 +53,7 @@ class MultiOllamaPipelineClient:
         ideation_models: Optional[Sequence[str] | str] = None,
         uml_models: Optional[Sequence[str] | str] = None,
         validator_models: Optional[Sequence[str] | str] = None,
+        num_ctx: Optional[int] = None,
         timeout_seconds: int = 180,
         **_: object,
     ):
@@ -66,6 +68,7 @@ class MultiOllamaPipelineClient:
         self.validator_models = _parse_models(
             validator_models or os.getenv("OLLAMA_VALIDATION_MODELS") or DEFAULT_VALIDATION_MODELS
         )
+        self.num_ctx = _parse_num_ctx(num_ctx or os.getenv("OLLAMA_NUM_CTX") or os.getenv("OLLAMA_CONTEXT_WINDOW") or DEFAULT_NUM_CTX)
         available = self._list_models()
         if available:
             self.ideation_models = [m for m in self.ideation_models if m in available] or self.ideation_models
@@ -76,11 +79,14 @@ class MultiOllamaPipelineClient:
         self.debug = (os.getenv("OLLAMA_PIPELINE_DEBUG") or "").lower() in ("1", "true", "yes", "on")
 
     # --- internal helpers -------------------------------------------------
-    def _post(self, model: str, prompt: str) -> str:
+    def _post(self, model: str, prompt: str, num_ctx: Optional[int] = None) -> str:
         url = f"{self.host}/api/generate"
         logger.info("[ollama-pipeline] sending prompt to model=%s url=%s", model, url)
         print(f"[ollama-pipeline] -> model={model} len(prompt)={len(prompt)}")
         data = {"stream": False, "model": model, "prompt": prompt}
+        ctx = num_ctx or self.num_ctx
+        if ctx:
+            data["options"] = {"num_ctx": ctx}
         resp = requests.post(url, json=data, timeout=self.timeout_seconds)
         resp.raise_for_status()
         return resp.json().get("response", "")
@@ -101,11 +107,11 @@ class MultiOllamaPipelineClient:
             logger.warning("[ollama-pipeline] unable to list models from %s: %s", getattr(self, "host", "?"), exc)
             return []
 
-    def _generate_with_candidates(self, models: List[str], prompt: str) -> str:
+    def _generate_with_candidates(self, models: List[str], prompt: str, num_ctx: Optional[int] = None) -> str:
         errors = []
         for model in models:
             try:
-                result = self._post(model, prompt)
+                result = self._post(model, prompt, num_ctx=num_ctx)
                 if self.debug:
                     logger.info("[ollama-pipeline] model=%s output_preview=%s", model, (result[:400] + ("..." if len(result) > 400 else "")))
                 return result
@@ -141,7 +147,7 @@ class MultiOllamaPipelineClient:
             return False
         return lines[0].lower().startswith("@startuml") and lines[-1].lower().startswith("@enduml")
 
-    def _validate_with_llm(self, plantuml: str, original_prompt: str, analyst_notes: str, validator_models: Optional[List[str]] = None) -> str:
+    def _validate_with_llm(self, plantuml: str, original_prompt: str, analyst_notes: str, validator_models: Optional[List[str]] = None, num_ctx: Optional[int] = None) -> str:
         validators = validator_models if validator_models is not None else self.validator_models
         if not validators:
             return plantuml
@@ -155,7 +161,7 @@ class MultiOllamaPipelineClient:
         )
         try:
             validated = self._extract_plantuml(
-                self._generate_with_candidates(validators, validation_prompt)
+                self._generate_with_candidates(validators, validation_prompt, num_ctx=num_ctx)
             )
             if not self._looks_like_plantuml(validated):
                 logger.warning("[ollama-pipeline] validator returned non-PlantUML output; keeping original diagram.")
@@ -188,6 +194,7 @@ class MultiOllamaPipelineClient:
         ideation_models = self.ideation_models
         uml_models = self.uml_models
         validator_models = self.validator_models
+        num_ctx = self.num_ctx
 
         if pipeline_models:
             if "ideation" in pipeline_models:
@@ -200,26 +207,30 @@ class MultiOllamaPipelineClient:
                     uml_models = override
             if "validation" in pipeline_models:
                 validator_models = _parse_models(pipeline_models.get("validation"))
+            if "contextWindow" in pipeline_models or "num_ctx" in pipeline_models:
+                override_ctx = _parse_num_ctx(pipeline_models.get("contextWindow") or pipeline_models.get("num_ctx"))
+                if override_ctx:
+                    num_ctx = override_ctx
 
         logger.info("[ollama-pipeline] diagram_hint=%s ideation_models=%s uml_models=%s validator_models=%s", diagram_hint, ideation_models, uml_models, validator_models)
-        print(f"[ollama-pipeline] diagram_hint={diagram_hint} ideation_models={ideation_models} uml_models={uml_models} validator_models={validator_models}")
+        print(f"[ollama-pipeline] diagram_hint={diagram_hint} ideation_models={ideation_models} uml_models={uml_models} validator_models={validator_models} num_ctx={num_ctx}")
 
         # Non-class diagrams: use provided UML prompt or generic builder, skip ideation.
         if diagram_hint != "class":
             logger.info("[ollama-pipeline] using direct UML generation (no ideation)")
             print("[ollama-pipeline] path=direct")
             direct_prompt = uml_prompt_template or self._build_non_class_prompt(prompt, diagram_hint)
-            plantuml = self._extract_plantuml(self._generate_with_candidates(uml_models, direct_prompt))
+            plantuml = self._extract_plantuml(self._generate_with_candidates(uml_models, direct_prompt, num_ctx=num_ctx))
             if self.debug:
                 logger.info("[ollama-pipeline] plantuml_candidate=%s", plantuml)
-            return self._validate_with_llm(plantuml, prompt, analyst_notes="", validator_models=validator_models)
+            return self._validate_with_llm(plantuml, prompt, analyst_notes="", validator_models=validator_models, num_ctx=num_ctx)
 
         # Class diagrams: run ideation unless explicitly skipped.
         effective_ideation = ideation_prompt or self._default_class_ideation_prompt(prompt)
         logger.info("[ollama-pipeline] running ideation with models=%s", ideation_models)
         print(f"[ollama-pipeline] path=class ideation_models={ideation_models}")
         analyst_notes = self._generate_with_candidates(
-            ideation_models or uml_models, effective_ideation
+            ideation_models or uml_models, effective_ideation, num_ctx=num_ctx
         )
         if self.debug:
             logger.info("[ollama-pipeline] ideation_notes=%s", analyst_notes)
@@ -230,12 +241,12 @@ class MultiOllamaPipelineClient:
 
         logger.info("[ollama-pipeline] generating UML with models=%s", uml_models)
         print(f"[ollama-pipeline] path=uml_generation uml_models={uml_models}")
-        plantuml = self._extract_plantuml(self._generate_with_candidates(uml_models, uml_prompt_text))
+        plantuml = self._extract_plantuml(self._generate_with_candidates(uml_models, uml_prompt_text, num_ctx=num_ctx))
         if self.debug:
             logger.info("[ollama-pipeline] plantuml_candidate=%s", plantuml)
 
         # Stage 3: optional LLM-based syntax validation/fixing.
-        return self._validate_with_llm(plantuml, prompt, analyst_notes, validator_models=validator_models)
+        return self._validate_with_llm(plantuml, prompt, analyst_notes, validator_models=validator_models, num_ctx=num_ctx)
 
     def explain_model(self, model: str) -> str:
         explain_prompt = f"Explain this UML model briefly:\n\n{model}"
@@ -432,3 +443,14 @@ class MultiOllamaPipelineClient:
             f"PlantUML:\n{model}"
         )
         return self._generate_with_candidates(self.uml_models, code_prompt)
+def _parse_num_ctx(value: Optional[str | int]) -> Optional[int]:
+    """
+    Convert an env/JSON value to a positive int for Ollama's num_ctx.
+    """
+    if value is None:
+        return None
+    try:
+        num = int(value)
+        return num if num > 0 else None
+    except Exception:
+        return None

@@ -1,10 +1,8 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { WS_ENABLED, WS_URL as WS_URL_BASE } from "../config";
 
 // Create a context for WebSocket messages
 const WebSocketContext = createContext();
-
-const WS_ENABLED = (process.env.REACT_APP_WS_ENABLED || "").toLowerCase() === "true";
-const WS_URL_ENV = process.env.REACT_APP_WS_URL;
 
 export function WebSocketProvider({ sessionId, children }) {
   const [wsStatus, setWsStatus] = useState("disconnected");
@@ -13,7 +11,7 @@ export function WebSocketProvider({ sessionId, children }) {
 
   // Respect build-time flag to disable WebSockets (default off for local).
   const WS_URL = WS_ENABLED && sessionId
-    ? (WS_URL_ENV || "ws://localhost:8080/ws") + `?token=${encodeURIComponent(sessionId)}`
+    ? `${WS_URL_BASE}?token=${encodeURIComponent(sessionId)}`
     : null;
   
   useEffect(() => {

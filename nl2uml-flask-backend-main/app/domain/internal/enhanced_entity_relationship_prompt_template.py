@@ -11,6 +11,7 @@ class EnhancedEntityRelationshipPromptTemplate(PromptTemplate):
             "- Output ONLY PlantUML between @startuml and @enduml (no markdown fences or explanations).\n"
             "- Model each entity with `entity Name { ... }` and list attributes inside.\n"
             "- Mark primary keys with `{PK}` and foreign keys with `{FK}` beside the attribute name; place keys before non-key attributes and separate sections with `--` when mixing.\n"
+            "- After attributes, add a constraints section using method syntax to show table-level rules (unique, check, index, default, not null); keep it separated with `--` and use parentheses to show covered columns, e.g., `+unique_order_user(userId, status)`.\n"
             "- Draw relationships with straight associations (`--`); include cardinality labels on both ends using quoted multiplicities (e.g., `Order \"0..*\" -- \"1\" Customer`).\n"
             "- Use inheritance (`<|--`) only when the prompt clearly describes specialization/generalization.\n"
             "- Keep styling light; ensure every referenced entity exists and braces are balanced.\n\n"
@@ -34,6 +35,9 @@ class EnhancedEntityRelationshipPromptTemplate(PromptTemplate):
             '      \"description\": \"string\",\n'
             '      \"attributes\": [\n'
             '        { \"name\": \"string\", \"type\": \"string\", \"role\": \"pk|fk|regular\", \"references\": \"TargetEntity.attribute|\\\"\\\"\" }\n'
+            "      ],\n"
+            '      \"constraints\": [\n'
+            '        { \"name\": \"string\", \"type\": \"pk|fk|unique|check|index|not_null|default\", \"columns\": [\"col\", \"...\"], \"expression\": \"string\", \"description\": \"string\" }\n'
             "      ],\n"
             '      \"subtypes\": [\"ChildEntity\", \"...\"]\n'
             "    }\n"
@@ -63,6 +67,7 @@ class EnhancedEntityRelationshipPromptTemplate(PromptTemplate):
             "- Each item in entities → `entity Name {{ ... }}`.\n"
             "- List PK attributes first, marked `{{PK}}`; FK attributes marked `{{FK}}` and optionally note the reference in the attribute name.\n"
             "- Separate key attributes from others with `--` when both exist.\n"
+            "- After attributes, insert a `--` separator and list each constraint as a method: `+constraint_name(columnA, columnB)`; include type or condition in the name or return type if helpful.\n"
             "- For relationships type:\n"
             "  - identifying → `A *-- B`\n"
             "  - non_identifying → `A -- B`\n"

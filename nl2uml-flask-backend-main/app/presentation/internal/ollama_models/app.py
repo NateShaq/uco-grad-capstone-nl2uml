@@ -5,6 +5,7 @@ from app.infrastructure.internal.ollama_pipeline_client import (
     DEFAULT_IDEATION_MODELS,
     DEFAULT_UML_MODELS,
     DEFAULT_VALIDATION_MODELS,
+    MultiOllamaPipelineClient,
     _parse_models,
 )
 
@@ -27,14 +28,17 @@ def handler(event, context):
             "body": json.dumps({"error": "Method not allowed"})
         }
 
-    ideation_models = _parse_models(os.getenv("OLLAMA_IDEATION_MODELS") or DEFAULT_IDEATION_MODELS)
-    uml_models = _parse_models(os.getenv("OLLAMA_UML_MODELS") or DEFAULT_UML_MODELS)
-    validation_models = _parse_models(os.getenv("OLLAMA_VALIDATION_MODELS") or DEFAULT_VALIDATION_MODELS)
+    # Build from environment (or defaults) and filter against the running Ollama host
+    client = MultiOllamaPipelineClient()
+    ideation_models = client.ideation_models or _parse_models(os.getenv("OLLAMA_IDEATION_MODELS") or DEFAULT_IDEATION_MODELS)
+    uml_models = client.uml_models or _parse_models(os.getenv("OLLAMA_UML_MODELS") or DEFAULT_UML_MODELS)
+    validation_models = client.validator_models or _parse_models(os.getenv("OLLAMA_VALIDATION_MODELS") or DEFAULT_VALIDATION_MODELS)
 
     payload = {
         "ideationModels": ideation_models,
         "umlModels": uml_models,
         "validationModels": validation_models,
+        "defaultNumCtx": client.num_ctx,
     }
 
     return {

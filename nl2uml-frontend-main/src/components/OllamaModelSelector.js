@@ -1,31 +1,27 @@
-import React, { useEffect, useId, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Form, Spinner, Button } from 'react-bootstrap';
+import { API_BASE } from '../config';
+
+const contextOptions = [2048, 4096, 8192, 16384, 32768];
 
 function normalizeSelected(selected) {
-  return selected || { ideation: '', uml: '', validation: '' };
+  return { ideation: '', uml: '', validation: '', contextWindow: '', ...(selected || {}) };
 }
 
-function buildId(prefix, value) {
-  return `${prefix}-${(value || '').replace(/[^a-z0-9]+/gi, '-')}`.toLowerCase();
-}
-
-const defaultOptions = { ideation: [], uml: [], validation: [] };
+const defaultOptions = { ideation: [], uml: [], validation: [], defaultNumCtx: null };
 
 /**
  * Small helper component to surface Ollama model choices when using the pipeline agent.
  */
 export default function OllamaModelSelector({
-  apiBase = 'http://localhost:8080',
+  apiBase = API_BASE,
   selectedModels,
   onChange,
   disabled = false,
-  namePrefix,
 }) {
   const [options, setOptions] = useState(defaultOptions);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const generatedId = useId();
-  const radioPrefix = namePrefix || generatedId;
   const [collapsed, setCollapsed] = useState(true);
 
   const normalizedSelected = useMemo(() => normalizeSelected(selectedModels), [selectedModels]);
@@ -44,6 +40,7 @@ export default function OllamaModelSelector({
           ideation: data.ideationModels || [],
           uml: data.umlModels || [],
           validation: data.validationModels || [],
+          defaultNumCtx: data.defaultNumCtx || null,
         });
       } catch (err) {
         if (cancelled) return;
@@ -75,6 +72,10 @@ export default function OllamaModelSelector({
       next.validation = options.validation[0];
       changed = true;
     }
+    if (!next.contextWindow && options.defaultNumCtx) {
+      next.contextWindow = options.defaultNumCtx;
+      changed = true;
+    }
     if (changed && typeof onChange === 'function') {
       onChange(next);
     }
@@ -91,6 +92,7 @@ export default function OllamaModelSelector({
     if (normalizedSelected.ideation) parts.push(`I: ${normalizedSelected.ideation}`);
     if (normalizedSelected.uml) parts.push(`U: ${normalizedSelected.uml}`);
     if (normalizedSelected.validation) parts.push(`V: ${normalizedSelected.validation}`);
+    if (normalizedSelected.contextWindow) parts.push(`CTX: ${normalizedSelected.contextWindow}`);
     return parts.join(' • ');
   }, [normalizedSelected]);
 
@@ -101,34 +103,46 @@ export default function OllamaModelSelector({
   };
 
   const renderGroup = (label, key) => (
-    <div className="mb-2">
-      <div className="small fw-semibold text-muted mb-1">
-        {label}
-        {tooltips[key] && (
-          <span className="ms-1 text-secondary" title={tooltips[key]} aria-label={tooltips[key]} style={{ cursor: 'help' }}>
-            ?
-          </span>
+    <div className="col-12 col-md-4 d-flex">
+      <div
+        className="border border-primary p-3 w-100 d-flex flex-column"
+        style={{ borderRadius: 12 }}
+      >
+        <div className="small fw-semibold text-muted text-center mb-2">
+          {label}
+          {tooltips[key] && (
+            <span
+              className="ms-1 text-secondary"
+              title={tooltips[key]}
+              aria-label={tooltips[key]}
+              style={{ cursor: 'help' }}
+            >
+              ?
+            </span>
+          )}
+        </div>
+        {options[key].length === 0 ? (
+          <div className="text-muted small text-center">No models configured.</div>
+        ) : (
+          <div className="d-flex flex-column gap-2">
+            {options[key].map((model) => {
+              const isActive = normalizedSelected[key] === model;
+              return (
+                <Button
+                  key={model}
+                  variant={isActive ? 'primary' : 'outline-secondary'}
+                  size="sm"
+                  className="w-100 text-start"
+                  disabled={disabled || loading}
+                  onClick={() => handleChange(key, model)}
+                >
+                  {model}
+                </Button>
+              );
+            })}
+          </div>
         )}
       </div>
-      {options[key].length === 0 ? (
-        <div className="text-muted small">No models configured.</div>
-      ) : (
-        <div className="d-flex flex-wrap gap-3">
-          {options[key].map((model) => (
-            <Form.Check
-              key={model}
-              id={buildId(key, model)}
-              type="radio"
-              name={`${radioPrefix}-${key}`}
-              label={model}
-              value={model}
-              checked={normalizedSelected[key] === model}
-              disabled={disabled || loading}
-              onChange={(e) => handleChange(key, e.target.value)}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 
@@ -144,11 +158,10 @@ export default function OllamaModelSelector({
           size="sm"
           onClick={() => setCollapsed(!collapsed)}
           disabled={loading}
-          aria-label="Configure Ollama models"
-          title="Configure Ollama models"
-          style={{ borderRadius: '50%', width: 36, height: 36, padding: 0 }}
+          aria-label="Edit Ollama models"
+          title="Edit Ollama models"
         >
-          ⚙️
+          [ Edit ]
         </Button>
       </div>
       {error && <div className="text-danger small mb-2">{error}</div>}
@@ -164,8 +177,8 @@ export default function OllamaModelSelector({
             top: '10%',
             right: '5%',
             zIndex: 1000,
-            minWidth: 280,
-            maxWidth: 360,
+            minWidth: 720,
+            maxWidth: '90vw',
           }}
         >
           <div className="d-flex justify-content-between align-items-center mb-2">
@@ -179,9 +192,43 @@ export default function OllamaModelSelector({
               ✕
             </Button>
           </div>
-          {renderGroup('Ideation Model', 'ideation')}
-          {renderGroup('UML Model', 'uml')}
-          {renderGroup('Validation Model', 'validation')}
+          <div className="d-flex flex-column align-items-center mb-4">
+            <div className="small fw-semibold text-muted mb-1">
+              Context Window
+              <span
+                className="ms-1 text-secondary"
+                title="Sets Ollama num_ctx; higher allows longer prompts/responses but uses more VRAM."
+                aria-label="Sets Ollama num_ctx; higher allows longer prompts/responses but uses more VRAM."
+                style={{ cursor: 'help' }}
+              >
+                ?
+              </span>
+            </div>
+            <Form.Select
+              size="sm"
+              className="w-auto"
+              style={{ minWidth: 180 }}
+              value={normalizedSelected.contextWindow || ''}
+              onChange={(e) => handleChange('contextWindow', e.target.value ? Number(e.target.value) : '')}
+              disabled={disabled || loading}
+            >
+              <option value="">
+                Default {options.defaultNumCtx ? `(${options.defaultNumCtx})` : ''}
+              </option>
+              {contextOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </Form.Select>
+          </div>
+          <div className="d-flex gap-3 flex-wrap justify-content-between">
+            <div className="row g-3 w-100">
+              {renderGroup('Ideation Model', 'ideation')}
+              {renderGroup('UML Model', 'uml')}
+              {renderGroup('Validation Model', 'validation')}
+            </div>
+          </div>
         </div>
       )}
     </div>

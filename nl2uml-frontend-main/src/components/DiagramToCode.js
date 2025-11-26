@@ -3,8 +3,7 @@ import { Button, Form } from 'react-bootstrap';
 import { callApi } from './api';
 import './DiagramToCode.css';
 import OllamaModelSelector from './OllamaModelSelector';
-
-const API_BASE = 'http://localhost:8080';
+import { API_BASE } from '../config';
 
 const languageKeywords = {
   python: ['def', 'class', 'import', 'from', 'return', 'if', 'else', 'elif', 'for', 'while', 'try', 'except', 'with', 'as', 'pass', 'yield', 'lambda', 'async', 'await'],
@@ -47,7 +46,7 @@ function ConvertDiagramToCode({ projectId, diagramId, sessionId }) {
   const [codeText, setCodeText] = useState('');
   const [sending, setSending] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState('ollama-pipeline');
-  const [ollamaModels, setOllamaModels] = useState({ ideation: '', uml: '', validation: '' });
+  const [ollamaModels, setOllamaModels] = useState({ ideation: '', uml: '', validation: '', contextWindow: '' });
   const [selectedLanguage, setSelectedLanguage] = useState('python');
   const [statusMessage, setStatusMessage] = useState('');
   const [collapsed, setCollapsed] = useState(false);

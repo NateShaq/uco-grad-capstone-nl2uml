@@ -3,8 +3,7 @@ import React, { useEffect, useState } from "react";
 import { callApi } from './api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import OllamaModelSelector from "./OllamaModelSelector";
-
-const API_BASE = 'http://localhost:8080';
+import { API_BASE } from "../config";
 
 const WorkspaceManager = ({ onLoadDiagram, sessionId }) => {
   const [projects, setProjects] = useState([]);
@@ -17,7 +16,7 @@ const WorkspaceManager = ({ onLoadDiagram, sessionId }) => {
   const [diagramType, setDiagramType] = useState("");
   const [diagramPrompt, setDiagramPrompt] = useState("");
   const [agentType, setAgentType] = useState("ollama-pipeline");
-  const [ollamaModels, setOllamaModels] = useState({ ideation: '', uml: '', validation: '' });
+  const [ollamaModels, setOllamaModels] = useState({ ideation: '', uml: '', validation: '', contextWindow: '' });
   const [includeProjectDiagrams, setIncludeProjectDiagrams] = useState(false);
   const [selectedDiagramIds, setSelectedDiagramIds] = useState([]);
   const [designApproach, setDesignApproach] = useState("");

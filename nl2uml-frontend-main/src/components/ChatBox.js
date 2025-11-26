@@ -2,15 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import { callApi } from './api'; // Adjust if using Amplify etc.
 import OllamaModelSelector from './OllamaModelSelector';
-
-const API_BASE = 'http://localhost:8080';
+import { API_BASE } from '../config';
 
 function ChatBox({ projectId, diagramId, userEmail, sessionId, onDiagramUpdated }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState('ollama-pipeline'); // default to pipeline
-  const [ollamaModels, setOllamaModels] = useState({ ideation: '', uml: '', validation: '' });
+  const [ollamaModels, setOllamaModels] = useState({ ideation: '', uml: '', validation: '', contextWindow: '' });
   const [collapsed, setCollapsed] = useState(false);
   const bottomRef = useRef(null);
 

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import { callApi } from './api'; // Adjust if using Amplify etc.
 import OllamaModelSelector from './OllamaModelSelector';
+import OllamaModelSelectorVertical from './OllamaModelSelectorVertical';
 import { API_BASE } from '../config';
 
 function ChatBox({ projectId, diagramId, userEmail, sessionId, onDiagramUpdated }) {
@@ -176,7 +177,7 @@ function ChatBox({ projectId, diagramId, userEmail, sessionId, onDiagramUpdated 
           </Form.Group>
           {selectedAgent.startsWith('ollama') && (
             <div className="mb-3">
-              <OllamaModelSelector
+              <OllamaModelSelectorVertical
                 apiBase={API_BASE}
                 selectedModels={ollamaModels}
                 onChange={setOllamaModels}

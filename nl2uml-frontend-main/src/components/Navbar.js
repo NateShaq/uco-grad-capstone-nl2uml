@@ -10,7 +10,14 @@ function Navbar({ sessionId, onNewSession }) {
     <>
       <BsNavbar bg="dark" variant="dark" expand="lg">
         <Container>
-          <BsNavbar.Brand href="#home">NL2UML</BsNavbar.Brand>
+          <BsNavbar.Brand href="#home" className="d-flex align-items-center gap-2">
+            <img
+              src={`${process.env.PUBLIC_URL}/UCO_Logo.svg`}
+              alt="University of Central Oklahoma logo"
+              style={{ height: 28, width: 'auto' }}
+            />
+            <span className="fw-semibold text-uppercase small">NL2UML</span>
+          </BsNavbar.Brand>
           <BsNavbar.Toggle aria-controls="basic-navbar-nav" />
           <BsNavbar.Collapse id="basic-navbar-nav">
             <div className="ms-auto d-flex align-items-center gap-3">

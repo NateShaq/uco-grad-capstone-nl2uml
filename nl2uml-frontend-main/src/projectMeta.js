@@ -1,5 +1,23 @@
 const projectMeta = {
   projectName: 'NL2UML',
+  version: 'v0.1.0',
+  abstract: 'NL2UML transforms natural-language software requirements into editable UML diagrams using an LLM-powered pipeline backed by PlantUML rendering and export tools. Sessions stay isolated via random identifiers so research feedback and diagram iterations can be traced to a single workspace.',
+  technologies: [
+    'React + React Router + Bootstrap UI',
+    'Flask API orchestrating Ollama-hosted LLMs',
+    'PlantUML generation, PNG/PDF exports, and session storage',
+    'Dockerized stack with SQLite persistence'
+  ],
+  documentation: {
+    primary: {
+      label: 'Project README',
+      url: 'https://github.com/NateShaq/uco-grad-capstone-nl2uml/blob/main/README.md'
+    },
+    report: {
+      label: 'Capstone overview',
+      url: 'https://github.com/NateShaq/uco-grad-capstone-nl2uml'
+    }
+  },
   university: {
     name: 'University of Central Oklahoma',
     location: 'Edmond, Oklahoma',
